@@ -63,7 +63,7 @@ class Track:
 
     """
 
-    def __init__(self, mean, covariance, track_id, cls_id, n_init, max_age,
+    def __init__(self, mean, covariance, track_id, cls_id, score, n_init, max_age,
                  feature=None):
         self.mean = mean
         self.covariance = covariance
@@ -80,6 +80,7 @@ class Track:
         self._n_init = n_init
         self._max_age = max_age
         self.cls_id = cls_id
+        self.score = score
 
     def to_tlwh(self):
         """Get current position in bounding box format `(top left x, top left y,
@@ -143,6 +144,7 @@ class Track:
         self.hits += 1
         self.time_since_update = 0
         self.cls_id = detection.cls_id
+        self.score = detection.score
         if self.state == TrackState.Tentative and self.hits >= self._n_init:
             self.state = TrackState.Confirmed
 
@@ -168,7 +170,4 @@ class Track:
         return self.state == TrackState.Deleted
 
     def to_arr(self):
-        tmp = [self.track_id, self.cls_id]
-        tmp.extend(self.to_tlbr())
-        tmp.extend(self.mean[4:])
-        return tmp
+        return [self.track_id, self.cls_id, self.score] + self.to_tlbr().tolist() + self.mean[4:].tolist()
