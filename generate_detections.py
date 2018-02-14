@@ -7,7 +7,7 @@ import cv2
 
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
-
+from tensorflow import train
 
 def _batch_norm_fn(x, scope=None):
     if scope is None:
@@ -173,7 +173,7 @@ def _create_network(incoming, num_classes, reuse=None, l2_normalize=True,
         features = slim.batch_norm(features, scope="ball", reuse=reuse)
         feature_norm = tf.sqrt(
             tf.constant(1e-8, tf.float32) +
-            tf.reduce_sum(tf.square(features), [1], keep_dims=True))
+            tf.reduce_sum(tf.square(features), [1], keepdims=True))
         features = features / feature_norm
 
         with slim.variable_scope.variable_scope("ball", reuse=reuse):
@@ -197,7 +197,7 @@ def _create_network(incoming, num_classes, reuse=None, l2_normalize=True,
         # Each mean vector in columns, normalize axis 0.
         weight_norm = tf.sqrt(
             tf.constant(1e-8, tf.float32) +
-            tf.reduce_sum(tf.square(weights), [0], keep_dims=True))
+            tf.reduce_sum(tf.square(weights), [0], keepdims=True))
         logits = scale * tf.matmul(features, weights / weight_norm)
 
     else:
@@ -322,7 +322,7 @@ def _create_image_encoder(preprocess_fn, factory_fn, image_shape, batch_size=32,
         else:
             session = tf.Session()
     if checkpoint_path is not None:
-        slim.get_or_create_global_step()
+        train.get_or_create_global_step()
         init_assign_op, init_feed_dict = slim.assign_from_checkpoint(
             checkpoint_path, slim.get_variables_to_restore())
         session.run(init_assign_op, feed_dict=init_feed_dict)
