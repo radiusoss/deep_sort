@@ -37,6 +37,9 @@ class Track:
     max_age : int
         The maximum number of consecutive misses before the track state is
         set to `Deleted`.
+    max_tentative_misses : int
+        The maximum number of missed detections allowed while the track is in a
+        tentative state before it is deleted
     feature : Optional[ndarray]
         Feature vector of the detection this track originates from. If not None,
         this feature is added to the `features` cache.
@@ -64,6 +67,7 @@ class Track:
     """
 
     def __init__(self, mean, covariance, track_id, cls_id, score, n_init, max_age,
+                 max_tentative_misses,
                  feature=None):
         self.mean = mean
         self.covariance = covariance
@@ -71,7 +75,8 @@ class Track:
         self.hits = 1
         self.age = 1
         self.time_since_update = 0
-
+        self.max_tentative_misses = max_tentative_misses
+        self.tentative_misses = 0
         self.state = TrackState.Tentative
         self.features = []
         if feature is not None:
@@ -152,7 +157,9 @@ class Track:
         """Mark this track as missed (no association at the current time step).
         """
         if self.state == TrackState.Tentative:
-            self.state = TrackState.Deleted
+            self.tentative_misses += 1
+            if self.tentative_misses > self.max_tentative_misses:
+                self.state = TrackState.Deleted
         elif self.time_since_update > self._max_age:
             self.state = TrackState.Deleted
 
