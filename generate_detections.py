@@ -302,7 +302,7 @@ def extract_image_patch(image, bbox, patch_shape):
 
 def _create_image_encoder(preprocess_fn, factory_fn, image_shape, batch_size=32,
                          session=None, checkpoint_path=None,
-                         loss_mode="cosine"):
+                         loss_mode="cosine", gpu_frac=None):
     image_var = tf.placeholder(tf.uint8, (None, ) + image_shape)
 
     preprocessed_image_var = tf.map_fn(
@@ -315,7 +315,12 @@ def _create_image_encoder(preprocess_fn, factory_fn, image_shape, batch_size=32,
     feature_dim = feature_var.get_shape().as_list()[-1]
 
     if session is None:
-        session = tf.Session()
+        if gpu_frac is not None:
+            opts = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_frac)
+            conf = tf.ConfigProto(gpu_options=opts)
+            session = tf.Session(config=conf)
+        else:
+            session = tf.Session()
     if checkpoint_path is not None:
         slim.get_or_create_global_step()
         init_assign_op, init_feed_dict = slim.assign_from_checkpoint(
@@ -333,19 +338,19 @@ def _create_image_encoder(preprocess_fn, factory_fn, image_shape, batch_size=32,
 
 
 def create_image_encoder(model_filename, batch_size=32, loss_mode="cosine",
-                         session=None):
+                         session=None, gpu_frac=None):
     image_shape = 128, 64, 3
     factory_fn = _network_factory(
         num_classes=1501, is_training=False, weight_decay=1e-8)
 
     return _create_image_encoder(
         _preprocess, factory_fn, image_shape, batch_size, session,
-        model_filename, loss_mode)
+        model_filename, loss_mode, gpu_frac=gpu_frac)
 
 
-def create_box_encoder(model_filename, batch_size=32, loss_mode="cosine"):
+def create_box_encoder(model_filename, batch_size=32, loss_mode="cosine", gpu_frac=None):
     image_shape = 128, 64, 3
-    image_encoder = create_image_encoder(model_filename, batch_size, loss_mode)
+    image_encoder = create_image_encoder(model_filename, batch_size, loss_mode, gpu_frac=gpu_frac)
 
     def encoder(image, boxes):
         image_patches = []
