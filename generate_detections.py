@@ -352,7 +352,7 @@ def create_box_encoder(model_filename, batch_size=32, loss_mode="cosine", gpu_fr
     image_shape = 128, 64, 3
     image_encoder = create_image_encoder(model_filename, batch_size, loss_mode, gpu_frac=gpu_frac)
 
-    def encoder(image, boxes):
+    def encoder(image, boxes, debug=False):
         image_patches = []
         for box in boxes:
             patch = extract_image_patch(image, box, image_shape[:2])
@@ -362,7 +362,10 @@ def create_box_encoder(model_filename, batch_size=32, loss_mode="cosine", gpu_fr
                     0., 255., image_shape).astype(np.uint8)
             image_patches.append(patch)
         image_patches = np.asarray(image_patches)
-        return image_encoder(image_patches)
+        if debug==False:
+            return image_encoder(image_patches)
+        else:
+            return image_encoder(image_patches), image_patches
 
     return encoder
 
