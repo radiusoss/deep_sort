@@ -178,7 +178,6 @@ class Track:
         return self.state == TrackState.Deleted
 
     def entropy(self):
-        print(np.log(np.linalg.det(self.covariance)))
         return np.log(np.linalg.det(self.covariance))
 
     def trace(self):
