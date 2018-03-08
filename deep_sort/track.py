@@ -1,5 +1,6 @@
 # vim: expandtab:ts=4:sw=4
 
+import numpy as np
 
 class TrackState:
     """
@@ -176,5 +177,15 @@ class Track:
         """Returns True if this track is dead and should be deleted."""
         return self.state == TrackState.Deleted
 
+    def entropy(self):
+        print(np.log(np.linalg.det(self.covariance)))
+        return np.log(np.linalg.det(self.covariance))
+
+    def trace(self):
+        return np.trace(self.covariance)
+
+#    def to_arr(self):
+#        return [self.track_id, self.cls_id, self.score] + self.to_tlbr().tolist() + self.mean[4:].tolist() + [self.entropy(), self.trace()]
+
     def to_arr(self):
-        return [self.track_id, self.cls_id, self.score] + self.to_tlbr().tolist() + self.mean[4:].tolist()
+        return [self.track_id, self.cls_id, self.score] + self.to_tlbr().tolist() + self.mean[4:].tolist() + [self.entropy(), self.trace()]
