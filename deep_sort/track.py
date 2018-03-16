@@ -69,7 +69,7 @@ class Track:
 
     def __init__(self, mean, covariance, track_id, cls_id, score, n_init, max_age,
                  max_tentative_misses,
-                 feature=None):
+                 feature=None, mask_key=None):
         self.mean = mean
         self.covariance = covariance
         self.track_id = track_id
@@ -80,8 +80,11 @@ class Track:
         self.tentative_misses = 0
         self.state = TrackState.Tentative
         self.features = []
+        self.mask_keys = []
         if feature is not None:
             self.features.append(feature)
+        if mask_key is not None:
+            self.mask_keys.append(mask_key)
 
         self._n_init = n_init
         self._max_age = max_age
@@ -146,6 +149,7 @@ class Track:
         self.mean, self.covariance = kf.update(
             self.mean, self.covariance, detection.to_xyah())
         self.features.append(detection.feature)
+        self.mask_keys.append(detection.mask_key)
 
         self.hits += 1
         self.time_since_update = 0
@@ -187,4 +191,8 @@ class Track:
 #        return [self.track_id, self.cls_id, self.score] + self.to_tlbr().tolist() + self.mean[4:].tolist() + [self.entropy(), self.trace()]
 
     def to_arr(self):
-        return [self.track_id, self.cls_id, self.score] + self.to_tlbr().tolist() + self.mean[4:].tolist() + [self.entropy(), self.trace()]
+        if not self.mask_keys:
+            mk = [-1]
+        else:
+            mk = [self.mask_keys[-1]]
+        return [self.track_id, self.cls_id, self.score] + self.to_tlbr().tolist() + self.mean[4:].tolist() + [self.entropy(), self.trace()] + mk
